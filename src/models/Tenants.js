@@ -1,4 +1,4 @@
-const connection = require("../database/connection");
+import connection from "../database/connection.js";
 
 const tableName = "tenants";
 
@@ -10,12 +10,9 @@ const getAll = async () => {
 };
 
 const create = async (tenantname) => {
-  const query =
-    `INSERT INTO ${tableName} (name) VALUES ($1)`;
+  const query = `INSERT INTO ${tableName} (name) VALUES ($1)`;
 
-  const values = [
-    tenantname
-  ];
+  const values = [tenantname];
 
   const connect = await connection.connect();
   const created = await connect.query(query, values);
@@ -26,15 +23,12 @@ const create = async (tenantname) => {
 
 const remove = async (id) => {
   const connect = await connection.connect();
-  const removed = await connect.query(
-    `DELETE FROM ${tableName} WHERE id = $1`,
-    [id]
-  );
+  const removed = await connect.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
   connect.release();
   return removed.rowCount;
 };
 
-module.exports = {
+export default {
   getAll,
   create,
   remove,

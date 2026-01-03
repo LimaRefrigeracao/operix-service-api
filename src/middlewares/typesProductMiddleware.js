@@ -1,13 +1,13 @@
-const validateCreate = (req, res, next) => {
-  const { body } = req;
+class TypesProductMiddleware {
+  static validateCreate(req, res, next) {
+    const { body } = req;
 
-  if (typeof body.name === "undefined" || body.name === "") {
-    res.status(400).json({ msg: 'Campo "Descrição" é obrigatório.' });
+    if (typeof body.name === "undefined" || body.name === "") {
+      return res.status(400).json({ msg: 'Campo "Descrição" é obrigatório.' });
+    }
+
+    next();
   }
+}
 
-  next();
-};
-
-module.exports = {
-  validateCreate
-}; 
+export default TypesProductMiddleware;

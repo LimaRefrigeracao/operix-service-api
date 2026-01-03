@@ -1,4 +1,6 @@
-const swaggerAutogen = require('swagger-autogen')({ openapi: '3.0.0', language: 'pt-BR' });
+import swaggerAutogen from 'swagger-autogen';
+
+const swaggerAutogenInstance = swaggerAutogen({ openapi: '3.0.0', language: 'pt-BR' });
 
 const doc = {
   info: {
@@ -34,6 +36,6 @@ const doc = {
 const outputFile = './swagger-output.json';
 const routes = ['./src/router.js'];
 
-swaggerAutogen(outputFile, routes, doc).then(() => {
-  require('./src/app.js');
+swaggerAutogenInstance(outputFile, routes, doc).then(async () => {
+  const { default: app } = await import('./src/app.js');
 });

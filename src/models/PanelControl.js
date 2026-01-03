@@ -1,8 +1,8 @@
-const connection = require("../database/connection");
-const typesProduct = require("./typesProductModel");
-const statusService = require("./statusServiceModel");
-const statusPayment = require("./statusPaymentModel");
-const service = require("./servicesModel");
+import connection from "../database/connection.js";
+import typesProduct from "./TypesProduct.js";
+import statusService from "./StatusService.js";
+import statusPayment from "./StatusPayment.js";
+import service from "./Services.js";
 
 const getCountProductByService = async () => {
   let arrayService = await service.getAllNotConcluded();
@@ -73,7 +73,7 @@ const getInfoPerformaceYearly = async () => {
   };
 };
 
-module.exports = {
+export default {
   getCountProductByService,
   getCountStatusByService,
   getCountStatusPaymentByService,

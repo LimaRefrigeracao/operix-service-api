@@ -1,6 +1,6 @@
-const connection = require("../database/connection");
-const moment = require("moment");
-const serviceModel = require("./servicesModel");
+import connection from "../database/connection.js";
+import moment from "moment";
+import serviceModel from "./Services.js";
 
 const getNotifications = async () => {
   const connect = await connection.connect();
@@ -29,6 +29,6 @@ const getNotifications = async () => {
 };
 
 
-module.exports = {
+export default {
   getNotifications,
 };

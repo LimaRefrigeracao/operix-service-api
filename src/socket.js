@@ -1,5 +1,7 @@
-const { io } = require("./app");
+import app from "./app.js";
 
-io.on("connection", socket => {
+const { io } = app;
+
+io.on("connection", (socket) => {
   console.log("Websocket Conectado");
 });

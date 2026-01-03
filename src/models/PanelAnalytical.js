@@ -1,6 +1,6 @@
-const services = require("./servicesModel")
-const order_of_service = require("./orderOfServiceModel")
-const expenses = require("./expensesModel")
+import services from "./Services.js";
+import order_of_service from "./OrderOfService.js";
+import expenses from "./Expenses.js";
 
 const getOrdersPaid = async () => {
   try {
@@ -40,7 +40,7 @@ const loadExpensesAll = async () => {
   }
 }
 
-module.exports = {
+export default {
   loadExpensesAll,
   getOrdersPaid,
 };

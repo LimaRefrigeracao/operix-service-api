@@ -4,6 +4,8 @@ Este arquivo lista tarefas importantes do projeto operix-api.
 Marque as tarefas como concluídas ao finalizá-las.
 
 ## Prioridade: Alta
+- [ ] Refatorar para ECMA Script
+
 - [ ] Implementar a funcionalidade de tenants, para o mesmo ser criado a partir da inserção do nome da empresa na criação, e ao criar um outro usuário por um admin, deve inserir o mesmo tenants.
 
 - [ ] Refatorar models para repositories/services

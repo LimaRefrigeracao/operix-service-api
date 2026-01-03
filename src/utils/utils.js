@@ -21,7 +21,7 @@ const generateUuid = () => {
   return uuid;
 };
 
-module.exports = {
+export default {
   formatDate,
   generateDateLocale,
   generateUuid,

@@ -1,49 +1,22 @@
-const orderOfServiceModel = require("../models/orderOfServiceModel");
-const utilities = require("../utils/utils.js");
+import OrderOfServiceService from "../services/orderOfServiceService.js";
+import utilities from "../utils/utils.js";
 
-const getAll = async (req, res) => {
-  const order_of_service = await orderOfServiceModel.getAll();
-  return res.status(200).json(order_of_service);
-};
-
-const getUnique = async (req, res) => {
-  const { cod } = req.params;
-  const order_of_service = await orderOfServiceModel.getUnique(cod);
-  return res.status(200).json(order_of_service);
-};
-
-const updateEstimate = async (req, res) => {
-  const { cod } = req.params;
-  if (req.body.type == "completa") {
-    const getOrderValue = await orderOfServiceModel.getUnique(cod);
-    const id = utilities.generateUuid();
-    let estimateArray = null;
-    let totalPrice = 0;
-
-    estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
-    const newRecord = {
-      id: id,
-      amount: req.body.amount,
-      description: req.body.description,
-      price: req.body.price,
-    };
-    estimateArray.push(newRecord);
-    for (const record of estimateArray) {
-      totalPrice += record.price;
-    }
-    estimateArray = JSON.stringify(estimateArray);
-    const order_of_service = await orderOfServiceModel.updateEstimate(
-      estimateArray,
-      totalPrice,
-      cod
-    );
+class OrderOfServiceController {
+  static async getAll(req, res) {
+    const order_of_service = await OrderOfServiceService.getAll();
     return res.status(200).json(order_of_service);
-  } else {
-    const remove_estimate_simple =
-      await orderOfServiceModel.removeEstimateSimple(cod, req.body.id);
+  }
 
-    if (remove_estimate_simple) {
-      const getOrderValue = await orderOfServiceModel.getUnique(cod);
+  static async getUnique(req, res) {
+    const { cod } = req.params;
+    const order_of_service = await OrderOfServiceService.getUnique(cod);
+    return res.status(200).json(order_of_service);
+  }
+
+  static async updateEstimate(req, res) {
+    const { cod } = req.params;
+    if (req.body.type == "completa") {
+      const getOrderValue = await OrderOfServiceService.getUnique(cod);
       const id = utilities.generateUuid();
       let estimateArray = null;
       let totalPrice = 0;
@@ -60,29 +33,58 @@ const updateEstimate = async (req, res) => {
         totalPrice += record.price;
       }
       estimateArray = JSON.stringify(estimateArray);
-      const order_of_service = await orderOfServiceModel.updateEstimate(
+      const order_of_service = await OrderOfServiceService.updateEstimate(
         estimateArray,
         totalPrice,
         cod
       );
       return res.status(200).json(order_of_service);
+    } else {
+      const remove_estimate_simple =
+        await OrderOfServiceService.removeEstimateSimple(cod, req.body.id);
+
+      if (remove_estimate_simple) {
+        const getOrderValue = await OrderOfServiceService.getUnique(cod);
+        const id = utilities.generateUuid();
+        let estimateArray = null;
+        let totalPrice = 0;
+
+        estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
+        const newRecord = {
+          id: id,
+          amount: req.body.amount,
+          description: req.body.description,
+          price: req.body.price,
+        };
+        estimateArray.push(newRecord);
+        for (const record of estimateArray) {
+          totalPrice += record.price;
+        }
+        estimateArray = JSON.stringify(estimateArray);
+        const order_of_service = await OrderOfServiceService.updateEstimate(
+          estimateArray,
+          totalPrice,
+          cod
+        );
+        return res.status(200).json(order_of_service);
+      }
+      return res.status(433).json();
     }
-    return res.status(433).json();
   }
-};
 
-const removeEstimate = async (req, res) => {
-  const { cod, idEstimate } = req.params;
-  const order_of_service = await orderOfServiceModel.removeEstimate(
-    cod,
-    idEstimate
-  );
-  return res.status(204).json(order_of_service);
-};
+  static async removeEstimate(req, res) {
+    const { cod, idEstimate } = req.params;
+    const order_of_service = await OrderOfServiceService.removeEstimate(
+      cod,
+      idEstimate
+    );
+    return res.status(204).json(order_of_service);
+  }
+}
 
-module.exports = {
-  getAll,
-  getUnique,
-  updateEstimate,
-  removeEstimate,
-};
+export const getAll = (req, res) => OrderOfServiceController.getAll(req, res);
+export const getUnique = (req, res) => OrderOfServiceController.getUnique(req, res);
+export const updateEstimate = (req, res) => OrderOfServiceController.updateEstimate(req, res);
+export const removeEstimate = (req, res) => OrderOfServiceController.removeEstimate(req, res);
+
+export default OrderOfServiceController;

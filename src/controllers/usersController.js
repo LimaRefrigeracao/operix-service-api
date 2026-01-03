@@ -1,90 +1,86 @@
-const usersModel = require("../models/usersModel");
-const tenantsModel = require("../models/tenantsModel");
-const bcrypt = require("bcrypt");
+import UsersService from "../services/usersService.js";
+import bcrypt from "bcrypt";
 
-const getAll = async (_req, res) => {
-  const users = await usersModel.getAll();
-  return res.status(200).json(users);
-};
+class UsersController {
+  static async getAll(_req, res) {
+    const users = await UsersService.getAll();
+    return res.status(200).json(users);
+  }
 
-const getSignature = async (req, res) => {
-  const { id } = req.params;
-  const users = await usersModel.getSignature(id);
-  return res.status(200).json(users);
-};
+  static async getSignature(req, res) {
+    const { id } = req.params;
+    const users = await UsersService.getSignature(id);
+    return res.status(200).json(users);
+  }
 
-const register = async (req, res) => {
-  const { tenantname, username, email, password, admin, signature } = req.body;
+  static async register(req, res) {
+    const { tenantname, username, email, password, admin, signature } = req.body;
 
-  const checkExists = await usersModel.checkUsersExists(email, username);
+  const checkExists = await UsersService.checkUsersExists(email, username);
 
-  if (checkExists[0] > 0 && checkExists[1] > 0) {
-    res
-      .status(422)
-      .json({ msg: "Este nome de usuário e email já estão cadastrados." });
-  } else if (checkExists[0] > 0) {
-    res.status(422).json({ msg: "Este email já tem uma conta ativa." });
-  } else if (checkExists[1] > 0) {
-    res
-      .status(422)
-      .json({ msg: "Este nome de usuário já está sendo utilizado." });
-  } else {
+    if (checkExists[0] > 0 && checkExists[1] > 0) {
+      return res
+        .status(422)
+        .json({ msg: "Este nome de usuário e email já estão cadastrados." });
+    }
+
+    if (checkExists[0] > 0) {
+      return res.status(422).json({ msg: "Este email já tem uma conta ativa." });
+    }
+
+    if (checkExists[1] > 0) {
+      return res
+        .status(422)
+        .json({ msg: "Este nome de usuário já está sendo utilizado." });
+    }
+
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
     const dataUser = { username, email, passwordHash, admin, signature };
 
     try {
-      const register = await usersModel.register(dataUser);
+      const register = await UsersService.register(dataUser);
       return res.status(200).json(register);
     } catch (error) {
       return res.status(500).json({ msg: "Erro ao tentar registrar usuário." });
     }
   }
-};
 
-const login = async (req, res) => {
-  try {
-    const login = await usersModel.login(req.body);
+  static async login(req, res) {
+    try {
+    const loginResult = await UsersService.login(req.body);
 
-    if (login === false) {
-      return res
-        .status(404)
-        .json({ msg: "Nome de usuário ou Senha incorreta." });
-    } else {
+      if (loginResult === false) {
+        return res
+          .status(404)
+          .json({ msg: "Nome de usuário ou Senha incorreta." });
+      }
+
       try {
-        const response = await usersModel.signToken(req.body.remember, login);
-        return res.status(200).json({ token: response.token, user: response.userData});
+        const response = await UsersService.signToken(req.body.remember, loginResult);
+        return res.status(200).json({ token: response.token, user: response.userData });
       } catch (error) {
         return res.status(500).json({ msg: "Erro na assinatura do token" });
       }
+    } catch (error) {
+      return res.status(404).json({ msg: "Erro ao tentar realizar login." });
     }
-  } catch (error) {
-    return res.status(404).json({ msg: "Erro ao tentar realizar login." });
   }
-};
-const remove = async (req, res) => {
-  const { id } = req.params;
-  const verifyUsers = await usersModel.verifyRemoveUser(id);
 
-
-  /* if (verifyUsers[0].username == 'admin' && verifyUsers[0].admin == true) {
-    return res.status(422).json({
-      msg: "Não é possível excluir o administrador raiz",
-    });
-  } else {
-    await usersModel.remove(id);
+  static async remove(req, res) {
+    const { id } = req.params;
+    // Removendo usuário via service/repository
+    await UsersService.remove(id);
     return res.status(204).json();
-  } */
-  await usersModel.remove(id);
-  return res.status(204).json();
-  
-};
+  }
+}
 
-module.exports = {
-  getSignature,
-  getAll,
-  register,
-  login,
-  remove,
-};
+// Export named handlers for compatibility with current router imports
+export const getSignature = (req, res) => UsersController.getSignature(req, res);
+export const getAll = (req, res) => UsersController.getAll(req, res);
+export const register = (req, res) => UsersController.register(req, res);
+export const login = (req, res) => UsersController.login(req, res);
+export const remove = (req, res) => UsersController.remove(req, res);
+
+export default UsersController;

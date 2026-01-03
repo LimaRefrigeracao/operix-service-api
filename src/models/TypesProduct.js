@@ -1,4 +1,4 @@
-const connection = require("../database/connection");
+import connection from "../database/connection.js";
 
 const getAll = async () => {
   const connect = await connection.connect();
@@ -9,8 +9,7 @@ const getAll = async () => {
 
 const create = async (types_product) => {
   const { name } = types_product;
-  const query =
-    "INSERT INTO types_product (name) VALUES ($1)";
+  const query = "INSERT INTO types_product (name) VALUES ($1)";
 
   const values = [name];
 
@@ -23,15 +22,12 @@ const create = async (types_product) => {
 
 const remove = async (id) => {
   const connect = await connection.connect();
-  const removed = await connect.query(
-    "DELETE FROM types_product WHERE id = $1",
-    [id]
-  );
+  const removed = await connect.query("DELETE FROM types_product WHERE id = $1", [id]);
   connect.release();
   return removed.rowCount;
 };
 
-module.exports = {
+export default {
   getAll,
   create,
   remove,

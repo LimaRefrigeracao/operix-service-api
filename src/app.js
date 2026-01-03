@@ -1,18 +1,22 @@
-require("dotenv").config() 
+import dotenv from "dotenv";
+import express, { json } from "express";
+import { createServer } from "http";
+import router from "./router.js";
+import { Server } from "socket.io";
 
-const express = require("express");
-const http = require("http");
-const router = require("./router");
+dotenv.config();
+
 const app = express();
-const server = http.createServer(app);
-const io = require("socket.io")(server, {
+const server = createServer(app);
+const io = new Server(server, {
   cors: {
     origin: process.env.ORIGIN,
     methods: ["GET", "POST"],
   },
 });
 
-app.use(express.json()) 
+
+app.use(json()) 
 app.use(function (_req, res, next) {
   res.header("Access-Control-Allow-Origin", process.env.ORIGIN) 
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE") 
@@ -24,4 +28,4 @@ app.use(function (_req, res, next) {
 }) 
 app.use(router) 
 
-module.exports = {server, io} 
+export default {server, io} 

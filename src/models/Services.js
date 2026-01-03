@@ -1,7 +1,8 @@
-const connection = require("../database/connection.js");
-const utilities = require("../utils/utils.js");
-const orders = require("./orderOfServiceModel");
-const status_payment = require("./statusPaymentModel");
+import connection from "../database/connection.js";
+import utilities from "../utils/utils.js";
+import orders from "./OrderOfService.js";
+import status_payment from "./StatusPayment.js";
+import app from "../app.js";
 
 const reloadSocketData = async (typeTable) => {
   let data = null;
@@ -10,7 +11,7 @@ const reloadSocketData = async (typeTable) => {
   } else if (typeTable == 2) {
     data = await getAllWharehouse();
   }
-  const { io } = require("../app");
+  const { io } = app;
   io.emit("reloadDataService", data);
   return true;
 };
@@ -19,12 +20,10 @@ const getAllPaid = async () => {
   try {
     const status = await status_payment.getUniqueStatus('Pago');
     const connect = await connection.connect();
-
     const services = await connect.query(
       "SELECT * FROM services WHERE payment_status = $1",
       [status[0].cod]
     );
-
     connect.release();
     return services.rows;
   } catch (error) {
@@ -91,13 +90,13 @@ const create = async (service) => {
       created_at,
     ];
 
-    const connect = await connection.connect();
-    const created = await connect.query(query, values);
-    connect.release();
+  const connect = await connection.connect();
+  const created = await connect.query(query, values);
+  connect.release();
 
-    await reloadSocketData(typeTable);
+  await reloadSocketData(typeTable);
 
-    return created.rowCount;
+  return created.rowCount;
   } else {
     return false;
   }
@@ -170,9 +169,7 @@ const updateStatusPayment = async (id, status, typeTable) => {
 
 const remove = async (id, cod_order, typeTable) => {
   const connect = await connection.connect();
-  const removed = await connect.query("DELETE FROM services WHERE id = $1", [
-    id,
-  ]);
+  const removed = await connect.query("DELETE FROM services WHERE id = $1", [id]);
   connect.release();
   await reloadSocketData(typeTable);
   if (removed.rowCount) {
@@ -190,7 +187,7 @@ const getCountProductByService = async (data) => {
   return services.rows;
 };
 
-module.exports = {
+export default {
   reloadSocketData,
   getAllPaid,
   getAllNotConcluded,

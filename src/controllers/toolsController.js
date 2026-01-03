@@ -1,10 +1,12 @@
-const toolsModel = require("../models/toolsModel");
+import ToolsService from "../services/toolsService.js";
 
-const getNotifications = async (_req, res) => {
-  const notification = await toolsModel.getNotifications();
-  return res.status(200).json(notification);
-};
+class ToolsController {
+  static async getNotifications(_req, res) {
+    const notification = await ToolsService.getNotifications();
+    return res.status(200).json(notification);
+  }
+}
 
-module.exports = {
-  getNotifications,
-};
+export const getNotifications = (req, res) => ToolsController.getNotifications(req, res);
+
+export default ToolsController;

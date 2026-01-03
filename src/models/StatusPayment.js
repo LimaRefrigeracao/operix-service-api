@@ -1,4 +1,4 @@
-const connection = require("../database/connection");
+import connection from "../database/connection.js";
 
 const getAll = async () => {
   const connect = await connection.connect();
@@ -16,14 +16,9 @@ const getUniqueStatus = async (description) => {
 
 const create = async (status_payment) => {
   const { description, cod, color } = status_payment;
-  const query =
-    "INSERT INTO status_payment (description, cod, color) VALUES ($1, $2, $3)";
+  const query = "INSERT INTO status_payment (description, cod, color) VALUES ($1, $2, $3)";
 
-  const values = [
-    description,
-    cod,
-    color
-  ];
+  const values = [description, cod, color];
 
   const connect = await connection.connect();
   const created = await connect.query(query, values);
@@ -34,15 +29,12 @@ const create = async (status_payment) => {
 
 const remove = async (id) => {
   const connect = await connection.connect();
-  const removed = await connect.query(
-    "DELETE FROM status_payment WHERE id = $1",
-    [id]
-  );
+  const removed = await connect.query("DELETE FROM status_payment WHERE id = $1", [id]);
   connect.release();
   return removed.rowCount;
 };
 
-module.exports = {
+export default {
   getAll,
   getUniqueStatus,
   create,

@@ -1,4 +1,4 @@
-const panelAnalyticalModel = require("../models/panelAnalyticalModel");
+import PanelAnalyticalService from "../services/panelAnalyticalService.js";
 
 const getLabelCards = () => {
   const addZero = num => (num < 10 ? '0' : '') + num;
@@ -47,7 +47,7 @@ const getSumValuesOrdersPaid = async (_req, res) => {
 
   const { labelDay, labelWeek, labelMonth, labelYear } = getLabelCards();
 
-  const filteredOrderOfService = await panelAnalyticalModel.getOrdersPaid();
+  const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid();
   let somaMesmoDia = 0;
   let somaMesmoMes = 0;
   let somaMesmoAno = 0;
@@ -121,7 +121,7 @@ const getValuesInvoicingLiquid = async (_req, res) => {
   let valueEntryMonth = 0;
   let valueEntryYear = 0;
 
-  const filteredOrderOfService = await panelAnalyticalModel.getOrdersPaid();
+  const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid();
 
   if (filteredOrderOfService) {
     filteredOrderOfService.forEach(order => {
@@ -147,7 +147,7 @@ const getValuesInvoicingLiquid = async (_req, res) => {
   let valueExitMonth = 0;
   let valueExitYear = 0;
 
-  const expensesAll = await panelAnalyticalModel.loadExpensesAll()
+  const expensesAll = await PanelAnalyticalService.loadExpensesAll()
 
   if (expensesAll) {
     expensesAll.forEach(expense => {
@@ -188,7 +188,15 @@ const getValuesInvoicingLiquid = async (_req, res) => {
 
 };
 
-module.exports = {
-  getSumValuesOrdersPaid,
-  getValuesInvoicingLiquid
-};
+class PanelAnalyticalController {
+  static async getSumValuesOrdersPaid(req, res) {
+    return getSumValuesOrdersPaid(req, res);
+  }
+
+  static async getValuesInvoicingLiquid(req, res) {
+    return getValuesInvoicingLiquid(req, res);
+  }
+}
+
+export default PanelAnalyticalController;
+

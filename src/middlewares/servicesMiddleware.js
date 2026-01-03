@@ -1,39 +1,38 @@
-const validateCreate = (req, res, next) => {
-  const { body } = req 
+class ServicesMiddleware {
+  static validateCreate(req, res, next) {
+    const { body } = req;
 
-  if (typeof body.product === "undefined" || body.product === "") {
-    res.status(400).json({ msg: 'Campo "Produto" é obrigatório.' }) 
-  }
-  if (typeof body.client === "undefined" || body.client === "") {
-    res.status(400).json({ msg: 'Campo "Cliente" é obrigatório.' }) 
-  }
-  if (typeof body.telephone === "undefined" || body.telephone === "") {
-    res.status(400).json({ msg: 'Campo "Telefone" é obrigatório.' }) 
-  }
-  if (typeof body.status === "undefined" || body.status === "") {
-    res.status(400).json({ msg: 'Campo "Status" é obrigatório.' }) 
-  }
+    if (typeof body.product === "undefined" || body.product === "") {
+      return res.status(400).json({ msg: 'Campo "Produto" é obrigatório.' });
+    }
+    if (typeof body.client === "undefined" || body.client === "") {
+      return res.status(400).json({ msg: 'Campo "Cliente" é obrigatório.' });
+    }
+    if (typeof body.telephone === "undefined" || body.telephone === "") {
+      return res.status(400).json({ msg: 'Campo "Telefone" é obrigatório.' });
+    }
+    if (typeof body.status === "undefined" || body.status === "") {
+      return res.status(400).json({ msg: 'Campo "Status" é obrigatório.' });
+    }
 
-  next() 
-} 
-
-const validateUpdateInfoClient = (req, res, next) => {
-  const { body } = req 
-
-  if (typeof body.product === "undefined" || body.product === "") {
-    res.status(400).json({ msg: 'Campo "Produto" é obrigatório.' }) 
-  }
-  if (typeof body.client === "undefined" || body.client === "") {
-    res.status(400).json({ msg: 'Campo "Cliente" é obrigatório.' }) 
-  }
-  if (typeof body.telephone === "undefined" || body.telephone === "") {
-    res.status(400).json({ msg: 'Campo "Telefone" é obrigatório.' }) 
+    next();
   }
 
-  next() 
-} 
+  static validateUpdateInfoClient(req, res, next) {
+    const { body } = req;
 
-module.exports = {
-  validateCreate,
-  validateUpdateInfoClient,
-} 
+    if (typeof body.product === "undefined" || body.product === "") {
+      return res.status(400).json({ msg: 'Campo "Produto" é obrigatório.' });
+    }
+    if (typeof body.client === "undefined" || body.client === "") {
+      return res.status(400).json({ msg: 'Campo "Cliente" é obrigatório.' });
+    }
+    if (typeof body.telephone === "undefined" || body.telephone === "") {
+      return res.status(400).json({ msg: 'Campo "Telefone" é obrigatório.' });
+    }
+
+    next();
+  }
+}
+
+export default ServicesMiddleware;

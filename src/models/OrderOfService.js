@@ -1,9 +1,11 @@
-const connection = require("../database/connection.js");
-const utilities = require("../utils/utils.js");
+import connection from "../database/connection.js";
+import utilities from "../utils/utils.js";
 
 const reloadSocketData = async (cod_order) => {
   const data = await getUnique(cod_order);
-  const { io } = require("../app");
+  const mod = await import("../app.js");
+  const app = mod.default || mod;
+  const { io } = app;
   io.emit("reloadDataOrders", data);
   return true;
 };
@@ -97,7 +99,7 @@ const remove = async (cod_order) => {
   return removed.rowCount;
 };
 
-module.exports = {
+export default {
   reloadSocketData,
   getAll,
   getUnique,
