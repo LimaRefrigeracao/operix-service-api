@@ -7,7 +7,7 @@ module.exports = {
         "tenants", 
         [
           {
-            name: "Operix",
+            name: "Lima Refrigeração",
           }
         ], 
         {}
