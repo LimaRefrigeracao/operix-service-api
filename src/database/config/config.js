@@ -1,5 +1,7 @@
-const fs = require("fs") 
-require("dotenv").config() 
+import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 module.exports = {
   development: {
