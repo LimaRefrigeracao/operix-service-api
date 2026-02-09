@@ -1,7 +1,5 @@
-"use strict";
-
-/** @type {import('sequelize-cli').Migration} */
-module.exports = {
+/** @type {import('sequelize-cli').Seeder} */
+export default {
   async up(queryInterface, Sequelize) {
     await queryInterface.bulkInsert(
       "users",
@@ -12,6 +10,8 @@ module.exports = {
           email: process.env.SEEDER_ADMIN_EMAIL,
           password: process.env.SEEDER_ADMIN_PASSWORD,
           admin: process.env.SEEDER_ADMIN_PERMISSION,
+          createdAt: Sequelize.fn("NOW"),
+          updatedAt: Sequelize.fn("NOW"),
         },
       ],
       {}
