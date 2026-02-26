@@ -13,7 +13,7 @@
     "seed": "bunx sequelize-cli db:seed:all",
     "dev": "bun src/server.ts",
     "build": "bun build ./src/server.ts --outdir ./dist --target bun",
-    "start": "bun dist/server.ts",
+    "start": "bun dist/server.js",
     "swagger": "bun swagger.js",
     "test": "bun test",
     "clean": "rm -rf dist && echo 'Done.'",
