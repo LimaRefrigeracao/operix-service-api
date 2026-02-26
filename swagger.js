@@ -19,7 +19,7 @@ const doc = {
       description: 'Desenvolvimento'
     },
     {
-      url: 'Em breve',
+      url: 'https://operix-service-api.cloudx.work',
       description: "Produção"
     }
   ],
