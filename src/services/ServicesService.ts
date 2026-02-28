@@ -1,5 +1,6 @@
 // @ts-nocheck
 import ServicesRepository from "../repositories/ServicesRepository.js";
+import Utils from "../utils/Utils.js";
 
 class ServicesService {
   static async getAll(tenant_id) {
@@ -11,6 +12,8 @@ class ServicesService {
   }
 
   static async create(service) {
+    const created_at = Utils.generateDateLocale();
+    service.created_at = created_at;
     return ServicesRepository.create(service);
   }
 

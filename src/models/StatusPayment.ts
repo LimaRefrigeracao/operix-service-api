@@ -52,15 +52,17 @@ export default class StatusPayment {
 
   static schema = z.object({
     id: z.number().nullable().optional().openapi({ example: 1 }),
-    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().openapi({ example: 1 }),
     description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Pago" }),
-    cod: z.number().nullable().optional().openapi({ example: 2 }),
-    color: z.string().optional().openapi({ example: "#00FF00" }),
+    cod: z.number().nullable().openapi({ example: 2 }),
+    color: z.string().openapi({ example: '{hex: "#00FF00", severity: null}' }),
   }).openapi("StatusPayment");
 
   static createSchema = z.object({
+    cod: z.number().nullable().openapi({ example: 2 }),
+    tenant_id: z.number().nullable().openapi({ example: 1 }),
     description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Pendente" }),
-    color: z.string().optional().openapi({ example: "#FFFF00" }),
+    color: z.string().openapi({ example: '{hex: "#00FF00", severity: null}' }),
   }).openapi("StatusPaymentCreate");
 
   static responseSchema = z.object({

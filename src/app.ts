@@ -18,6 +18,8 @@ const io: SocketServer = new Server(server, {
   },
 });
 
+(app as any).io = io;
+
 app.use(json());
 app.use(cors({
   origin: process.env.ORIGIN,

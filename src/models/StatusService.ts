@@ -61,6 +61,8 @@ export default class StatusService {
   static createSchema = z.object({
     description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Concluído" }),
     color: z.string().optional().openapi({ example: "#00FF00" }),
+    cod: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
   }).openapi("StatusServiceCreate");
 
   static responseSchema = z.object({
