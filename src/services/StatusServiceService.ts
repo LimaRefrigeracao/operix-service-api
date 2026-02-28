@@ -2,16 +2,16 @@
 import StatusServiceRepository from "../repositories/StatusServiceRepository.js";
 
 class StatusServiceService {
-  static async getAll() {
-    return StatusServiceRepository.getAll();
+  static async getAll(tenant_id) {
+    return StatusServiceRepository.getAll(tenant_id);
   }
 
-  static async create(data: any) {
-    return StatusServiceRepository.create(data);
+  static async create(status) {
+    return StatusServiceRepository.create(status);
   }
 
-  static async remove(id: any) {
-    return StatusServiceRepository.remove(id);
+  static async remove(id, tenant_id) {
+    return StatusServiceRepository.remove(id, tenant_id);
   }
 }
 

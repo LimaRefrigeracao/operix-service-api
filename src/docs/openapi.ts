@@ -4,27 +4,27 @@ import {
 } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
 
-import AuthMiddleware from "../middlewares/AuthMiddleware";
-import ExpensesMiddleware from "../middlewares/ExpensesMiddleware";
-import ServicesMiddleware from "../middlewares/ServicesMiddleware";
-import OrderOfServiceMiddleware from "../middlewares/OrderOfServiceMiddleware";
-import StatusPaymentMiddleware from "../middlewares/StatusPaymentMiddleware";
-import StatusServiceMiddleware from "../middlewares/StatusServiceMiddleware";
-import TypesProductMiddleware from "../middlewares/TypesProductMiddleware";
-import TenantsMiddleware from "../middlewares/TenantsMiddleware";
+import User from "../models/Users";
+import Auth from "../models/Auth.js";
+import Expense from "../models/Expenses";
+import Service from "../models/Services";
+import OrderOfService from "../models/OrderOfService";
+import StatusPayment from "../models/StatusPayment";
+import StatusService from "../models/StatusService";
+import TypeProduct from "../models/TypesProduct";
+import Tenant from "../models/Tenants";
 
 const registry = new OpenAPIRegistry();
 
-registry.register("Register", AuthMiddleware.registerSchema);
-registry.register("Login", AuthMiddleware.loginSchema);
-registry.register("ExpenseCreate", ExpensesMiddleware.createSchema);
-registry.register("ServiceCreate", ServicesMiddleware.createSchema);
-registry.register("ServiceUpdateInfoClient", ServicesMiddleware.updateInfoClientSchema);
-registry.register("OrderUpdateEstimate", OrderOfServiceMiddleware.updateEstimateSchema);
-registry.register("StatusPaymentCreate", StatusPaymentMiddleware.createSchema);
-registry.register("StatusServiceCreate", StatusServiceMiddleware.createSchema);
-registry.register("TypeProductCreate", TypesProductMiddleware.createSchema);
-registry.register("TenantCreate", TenantsMiddleware.createSchema);
+registry.register("Register", Auth.registerSchema);
+registry.register("Login", Auth.loginSchema);
+registry.register("Expense", Expense.schema);
+registry.register("Service", Service.schema);
+registry.register("OrderOfService", OrderOfService.schema);
+registry.register("StatusPayment", StatusPayment.schema);
+registry.register("StatusService", StatusService.schema);
+registry.register("TypeProduct", TypeProduct.schema);
+registry.register("Tenant", Tenant.schema);
 
 registry.registerComponent("securitySchemes", "bearerAuth", {
   type: "http",
@@ -44,7 +44,7 @@ registry.registerPath({
   tags: ["Autenticação"],
   request: {
     body: {
-      content: { "application/json": { schema: AuthMiddleware.registerSchema } },
+      content: { "application/json": { schema: Auth.registerSchema } },
       required: true,
     }
   },
@@ -57,12 +57,13 @@ registry.registerPath({
   tags: ["Autenticação"],
   request: {
     body: {
-      content: { "application/json": { schema: AuthMiddleware.loginSchema } },
+      content: { "application/json": { schema: Auth.loginSchema } },
       required: true,
     }
   },
   responses: { 201: { description: "Usuário logado" } }
 });
+
 
 // ========================
 // USERS
@@ -73,7 +74,7 @@ registry.registerPath({
   path: "/users",
   tags: ["Usuários"],
   security,
-  responses: { 200: { description: "Usuários listados" } }
+  responses: { 200: { content: { "application/json": { schema: User.listResponseSchema } }, description: "Usuários listados" } }
 });
 
 registry.registerPath({
@@ -103,7 +104,7 @@ registry.registerPath({
   path: "/tenants",
   tags: ["Unidades"],
   security,
-  responses: { 200: { description: "Unidades listadas" } }
+  responses: { 200: { content: { "application/json": { schema: Tenant.listResponseSchema } }, description: "Unidades listadas" } }
 });
 
 registry.registerPath({
@@ -113,11 +114,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: TenantsMiddleware.createSchema } },
+      content: { "application/json": { schema: Tenant.createSchema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Unidade criada" } }
+  responses: { 201: { content: { "application/json": { schema: Tenant.responseSchema } }, description: "Unidade criada" } }
 });
 
 registry.registerPath({
@@ -138,7 +139,7 @@ registry.registerPath({
   path: "/expenses",
   tags: ["Despesas"],
   security,
-  responses: { 200: { description: "Despesas listadas" } }
+  responses: { 200: { content: { "application/json": { schema: Expense.listResponseSchema } }, description: "Despesas listadas" } }
 });
 
 registry.registerPath({
@@ -148,11 +149,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: ExpensesMiddleware.createSchema } },
+      content: { "application/json": { schema: Expense.schema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Despesa criada" } }
+  responses: { 201: { content: { "application/json": { schema: Expense.responseSchema } }, description: "Despesa criada" } }
 });
 
 registry.registerPath({
@@ -173,7 +174,7 @@ registry.registerPath({
   path: "/services",
   tags: ["Serviços"],
   security,
-  responses: { 200: { description: "Serviços listados" } }
+  responses: { 200: { content: { "application/json": { schema: Service.listResponseSchema } }, description: "Serviços listados" } }
 });
 
 registry.registerPath({
@@ -181,7 +182,7 @@ registry.registerPath({
   path: "/services/warehouse",
   tags: ["Serviços"],
   security,
-  responses: { 200: { description: "Serviços do almoxerifado listados" } }
+  responses: { 200: { content: { "application/json": { schema: Service.listResponseSchema } }, description: "Serviços do almoxerifado listados" } }
 });
 
 registry.registerPath({
@@ -191,11 +192,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: ServicesMiddleware.createSchema } },
+      content: { "application/json": { schema: Service.createSchema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Serviço criado" } }
+  responses: { 201: { content: { "application/json": { schema: Service.responseSchema } }, description: "Serviço criado" } }
 });
 
 registry.registerPath({
@@ -215,7 +216,7 @@ registry.registerPath({
   request: {
     params: z.object({ id: z.string() }),
     body: {
-      content: { "application/json": { schema: ServicesMiddleware.updateInfoClientSchema } },
+      content: { "application/json": { schema: Service.updateInfoClientSchema } },
       required: true,
     }
   },
@@ -258,7 +259,7 @@ registry.registerPath({
   path: "/order_of_service/",
   tags: ["Ordens de Serviço"],
   security,
-  responses: { 200: { description: "Ordens de Serviço listadas" } }
+  responses: { 200: { content: { "application/json": { schema: OrderOfService.listResponseSchema } }, description: "Ordens de Serviço listadas" } }
 });
 
 registry.registerPath({
@@ -267,7 +268,7 @@ registry.registerPath({
   tags: ["Ordens de Serviço"],
   security,
   request: { params: z.object({ cod: z.string() }) },
-  responses: { 200: { description: "Ordem de Serviço detalhada" } }
+  responses: { 200: { content: { "application/json": { schema: OrderOfService.responseSchema } }, description: "Ordem de Serviço detalhada" } }
 });
 
 registry.registerPath({
@@ -278,7 +279,7 @@ registry.registerPath({
   request: {
     params: z.object({ cod: z.string() }),
     body: {
-      content: { "application/json": { schema: OrderOfServiceMiddleware.updateEstimateSchema } },
+      content: { "application/json": { schema: OrderOfService.updateEstimateSchema } },
       required: true,
     }
   },
@@ -303,7 +304,7 @@ registry.registerPath({
   path: "/status_payment",
   tags: ["Status de Pagamento"],
   security,
-  responses: { 200: { description: "Status de Pagamento listados" } }
+  responses: { 200: { content: { "application/json": { schema: StatusPayment.listResponseSchema } }, description: "Status de Pagamento listados" } }
 });
 
 registry.registerPath({
@@ -313,11 +314,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: StatusPaymentMiddleware.createSchema } },
+      content: { "application/json": { schema: StatusPayment.createSchema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Status de Pagamento criado" } }
+  responses: { 201: { content: { "application/json": { schema: StatusPayment.responseSchema } }, description: "Status de Pagamento criado" } }
 });
 
 registry.registerPath({
@@ -338,7 +339,7 @@ registry.registerPath({
   path: "/status_service",
   tags: ["Status de Serviço"],
   security,
-  responses: { 200: { description: "Status de Serviço listados" } }
+  responses: { 200: { content: { "application/json": { schema: StatusService.listResponseSchema } }, description: "Status de Serviço listados" } }
 });
 
 registry.registerPath({
@@ -348,11 +349,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: StatusServiceMiddleware.createSchema } },
+      content: { "application/json": { schema: StatusService.createSchema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Status de Serviço criado" } }
+  responses: { 201: { content: { "application/json": { schema: StatusService.responseSchema } }, description: "Status de Serviço criado" } }
 });
 
 registry.registerPath({
@@ -373,7 +374,7 @@ registry.registerPath({
   path: "/types_product",
   tags: ["Tipos de Produtos"],
   security,
-  responses: { 200: { description: "Tipos de Produtos listados" } }
+  responses: { 200: { content: { "application/json": { schema: TypeProduct.listResponseSchema } }, description: "Tipos de Produtos listados" } }
 });
 
 registry.registerPath({
@@ -383,11 +384,11 @@ registry.registerPath({
   security,
   request: {
     body: {
-      content: { "application/json": { schema: TypesProductMiddleware.createSchema } },
+      content: { "application/json": { schema: TypeProduct.createSchema } },
       required: true,
     }
   },
-  responses: { 201: { description: "Tipo de Produto criado" } }
+  responses: { 201: { content: { "application/json": { schema: TypeProduct.responseSchema } }, description: "Tipo de Produto criado" } }
 });
 
 registry.registerPath({

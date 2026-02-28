@@ -1,36 +1,59 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const tableName = "tenants";
+extendZodWithOpenApi(z);
 
-const getAll = async () => {
-  const connect = await connection.connect();
-  const tenants = await connect.query(`SELECT * FROM ${tableName}`);
-  connect.release();
-  return tenants.rows;
-};
+export default class Tenant {
+  id: number | null;
+  name: string;
 
-const create = async (tenantname) => {
-  const query = `INSERT INTO ${tableName} (name) VALUES ($1)`;
+  constructor({
+    id = null,
+    name = "",
+  }: any = {}) {
+    this.id = id;
+    this.name = name;
+  }
 
-  const values = [tenantname];
+  static fromRequest(body: any = {}) {
+    return new Tenant({
+      id: body.id || null,
+      name: body.name,
+    });
+  }
 
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
+  static fromRequestParams(params: any = {}) {
+    return new Tenant({
+      id: params.id
+    });
+  }
 
-  return created.rowCount;
-};
+  toJSON() {
+    return {
+      id: this.id,
+      name: this.name,
+    };
+  }
 
-const remove = async (id) => {
-  const connect = await connection.connect();
-  const removed = await connect.query(`DELETE FROM ${tableName} WHERE id = $1`, [id]);
-  connect.release();
-  return removed.rowCount;
-};
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    name: z.string().min(1, 'Campo "Nome" é obrigatório.').openapi({ example: "Unidade Central" }),
+  }).openapi("Tenant");
 
-export default {
-  getAll,
-  create,
-  remove,
-};
+  static createSchema = z.object({
+    name: z.string().min(1, 'Campo "Nome" é obrigatório.').openapi({ example: "Nova Filial" }),
+  }).openapi("TenantCreate");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: Tenant.schema
+  }).openapi("TenantResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(Tenant.schema)
+  }).openapi("TenantListResponse");
+}
+

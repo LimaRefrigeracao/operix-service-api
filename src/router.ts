@@ -15,15 +15,17 @@ import ExpensesController from './controllers/ExpensesController.js';
 import TenantsController from './controllers/TenantsController';
 
 import AuthMiddleware from './middlewares/AuthMiddleware';
-import ServicesMiddleware from './middlewares/ServicesMiddleware';
-import OrderOfServiceMiddleware from './middlewares/OrderOfServiceMiddleware';
-import StatusPaymentMiddleware from './middlewares/StatusPaymentMiddleware';
-import StatusServiceMiddleware from './middlewares/StatusServiceMiddleware';
-import TypesProductMiddleware from './middlewares/TypesProductMiddleware';
-import ExpensesMiddleware from './middlewares/ExpensesMiddleware';
-import TenantsMiddleware from './middlewares/TenantsMiddleware';
-
 import ValidateMiddleware from "./middlewares/ValidateMiddleware";
+
+import User from './models/Users';
+import Auth from './models/Auth.js';
+import Service from './models/Services';
+import OrderOfService from './models/OrderOfService';
+import StatusPayment from './models/StatusPayment';
+import StatusService from './models/StatusService';
+import TypeProduct from './models/TypesProduct';
+import Expense from './models/Expenses';
+import Tenant from './models/Tenants';
 
 const router = Router();
 const openApiDocument = generateOpenApiDocument();
@@ -32,20 +34,30 @@ router.use(json());
 router.use('/', serve);
 router.get('/', setup(openApiDocument));
 
+// ========================
+// AUTH
+// ========================
+
 router.post(
   '/auth/register',
-  ValidateMiddleware.validateSchema(AuthMiddleware.registerSchema),
+  ValidateMiddleware.validateSchema(Auth.registerSchema),
   AuthController.register
 );
 
 router.post(
   '/auth/login',
-  ValidateMiddleware.validateSchema(AuthMiddleware.loginSchema),
+  ValidateMiddleware.validateSchema(Auth.loginSchema),
   AuthController.login
 );
 
+
+// ========================
+// USERS
+// ========================
+
 router.get(
-  '/users', AuthMiddleware.authToken,
+  '/users',
+  AuthMiddleware.authToken,
   UsersController.getAll
 );
 
@@ -56,41 +68,64 @@ router.get(
 );
 
 router.delete(
-  '/users/:id', AuthMiddleware.authToken,
+  '/users/:id',
+  AuthMiddleware.authToken,
   UsersController.remove
 );
 
-router.get('/tenants', AuthMiddleware.authToken,
+// ========================
+// TENANTS
+// ========================
+
+router.get(
+  '/tenants',
+  AuthMiddleware.authToken,
   TenantsController.getAll
 );
 
-router.post('/tenants', AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(TenantsMiddleware.createSchema),
+router.post(
+  '/tenants',
+  AuthMiddleware.authToken,
+  ValidateMiddleware.validateSchema(Tenant.createSchema),
   TenantsController.create
 );
 
-router.delete('/tenants/:id', AuthMiddleware.authToken,
+router.delete(
+  '/tenants/:id',
+  AuthMiddleware.authToken,
   TenantsController.remove
 );
 
+// ========================
+// EXPENSES
+// ========================
+
 router.get(
-  '/expenses', AuthMiddleware.authToken,
+  '/expenses',
+  AuthMiddleware.authToken,
   ExpensesController.getAll
 );
 
 router.post(
-  '/expenses', AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(ExpensesMiddleware.createSchema),
+  '/expenses',
+  AuthMiddleware.authToken,
+  ValidateMiddleware.validateSchema(Expense.schema),
   ExpensesController.create
 );
 
 router.delete(
-  '/expenses/:id', AuthMiddleware.authToken,
+  '/expenses/:id',
+  AuthMiddleware.authToken,
   ExpensesController.remove
 );
 
+// ========================
+// SERVICES
+// ========================
+
 router.get(
-  '/services', AuthMiddleware.authToken,
+  '/services',
+  AuthMiddleware.authToken,
   ServicesController.getAll
 );
 
@@ -103,7 +138,7 @@ router.get(
 router.post(
   '/services',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(ServicesMiddleware.createSchema),
+  ValidateMiddleware.validateSchema(Service.createSchema),
   ServicesController.create
 );
 
@@ -116,7 +151,7 @@ router.put(
 router.put(
   '/services/info/client/:id',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(ServicesMiddleware.updateInfoClientSchema),
+  ValidateMiddleware.validateSchema(Service.updateInfoClientSchema),
   ServicesController.updateInfoClient
 );
 
@@ -138,6 +173,10 @@ router.delete(
   ServicesController.remove
 );
 
+// ========================
+// ORDER OF SERVICE
+// ========================
+
 router.get(
   '/order_of_service/',
   AuthMiddleware.authToken,
@@ -153,7 +192,7 @@ router.get(
 router.put(
   '/order_of_service/estimate/:cod',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(OrderOfServiceMiddleware.updateEstimateSchema),
+  ValidateMiddleware.validateSchema(OrderOfService.updateEstimateSchema),
   OrderOfServiceController.updateEstimate
 );
 
@@ -162,6 +201,10 @@ router.delete(
   AuthMiddleware.authToken,
   OrderOfServiceController.removeEstimate
 );
+
+// ========================
+// STATUS PAYMENT
+// ========================
 
 router.get(
   '/status_payment',
@@ -172,7 +215,7 @@ router.get(
 router.post(
   '/status_payment',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(StatusPaymentMiddleware.createSchema),
+  ValidateMiddleware.validateSchema(StatusPayment.createSchema),
   StatusPaymentController.create
 );
 
@@ -181,6 +224,10 @@ router.delete(
   AuthMiddleware.authToken,
   StatusPaymentController.remove
 );
+
+// ========================
+// STATUS SERVICE
+// ========================
 
 router.get(
   '/status_service',
@@ -191,7 +238,7 @@ router.get(
 router.post(
   '/status_service',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(StatusServiceMiddleware.createSchema),
+  ValidateMiddleware.validateSchema(StatusService.createSchema),
   StatusServiceController.create
 );
 
@@ -200,6 +247,10 @@ router.delete(
   AuthMiddleware.authToken,
   StatusServiceController.remove
 );
+
+// ========================
+// TYPES PRODUCT
+// ========================
 
 router.get(
   '/types_product',
@@ -210,7 +261,7 @@ router.get(
 router.post(
   '/types_product',
   AuthMiddleware.authToken,
-  ValidateMiddleware.validateSchema(TypesProductMiddleware.createSchema),
+  ValidateMiddleware.validateSchema(TypeProduct.createSchema),
   TypesProductController.create
 );
 
@@ -219,6 +270,10 @@ router.delete(
   AuthMiddleware.authToken,
   TypesProductController.remove
 );
+
+// ========================
+// PANEL ANALYTICAL
+// ========================
 
 router.get(
   '/panel_analytical/info_values_os_paid',
@@ -232,6 +287,9 @@ router.get(
   PanelAnalyticalController.getValuesInvoicingLiquid
 );
 
+// ========================
+// TOOLS
+// ========================
 
 router.get(
   '/tools/notifications',
@@ -240,3 +298,4 @@ router.get(
 );
 
 export default router;
+

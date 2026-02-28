@@ -1,204 +1,145 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
-import utilities from "../utils/utils.js";
-import orders from "./OrderOfService.js";
-import status_payment from "./StatusPayment.js";
-import app from "../app.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const reloadSocketData = async (typeTable) => {
-  let data = null;
-  if (typeTable == 1) {
-    data = await getAll();
-  } else if (typeTable == 2) {
-    data = await getAllWharehouse();
-  }
-  const { io } = app;
-  io.emit("reloadDataService", data);
-  return true;
-};
+extendZodWithOpenApi(z);
 
-const getAllPaid = async () => {
-  try {
-    const status = await status_payment.getUniqueStatus('Pago');
-    const connect = await connection.connect();
-    const services = await connect.query(
-      "SELECT * FROM services WHERE payment_status = $1",
-      [status[0].cod]
-    );
-    connect.release();
-    return services.rows;
-  } catch (error) {
-    console.error("Error in getAllPaid:", error.message);
-    throw error;
-  }
-};
+export default class Service {
+  id: number | null;
+  tenant_id: number | null;
+  product: string;
+  client: string;
+  telephone: string;
+  adress: string;
+  status: number | null;
+  payment_status: number | null;
+  order_of_service: number | null;
+  observation: string;
+  warehouse_status: boolean;
+  created_at: string | null;
+  updated_at_service: string | null;
+  updated_at_payment: string | null;
+  created_at_warehouse: string | null;
 
-
-const getAllNotConcluded = async () => {
-  const connect = await connection.connect();
-  const services = await connect.query(
-    "SELECT * FROM services WHERE warehouse_status = false AND status <> 13 ORDER BY id DESC"
-  );
-  connect.release();
-  return services.rows;
-};
-
-const getAll = async () => {
-  const connect = await connection.connect();
-  const services = await connect.query(
-    "SELECT * FROM services WHERE warehouse_status = false ORDER BY id DESC"
-  );
-  connect.release();
-  return services.rows;
-};
-
-const getAllWharehouse = async () => {
-  const connect = await connection.connect();
-  const services = await connect.query(
-    "SELECT * FROM services WHERE warehouse_status = true ORDER BY created_at_warehouse DESC"
-  );
-  connect.release();
-  return services.rows;
-};
-
-const create = async (service) => {
-  const {
-    product,
-    client,
-    telephone,
-    adress,
-    status,
-    observation,
-    created_at,
-    typeTable,
-  } = service;
-
-  /* const created_at = utilities.generateDateLocale(); */
-  const cod_order = await orders.create(created_at);
-  if (cod_order) {
-    const query =
-      "INSERT INTO services(product, client, telephone, adress, status, payment_status, order_of_service, observation, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)";
-
-    const values = [
-      product,
-      client,
-      telephone,
-      adress,
-      status,
-      1,
-      cod_order,
-      observation,
-      created_at,
-    ];
-
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
-
-  await reloadSocketData(typeTable);
-
-  return created.rowCount;
-  } else {
-    return false;
-  }
-};
-
-const updateWarehouse = async (id, value, typeTable) => {
-  const created_at_warehouse = utilities.generateDateLocale();
-  let warehouse_status = null;
-
-  if (value === "false") {
-    warehouse_status = true;
-  } else {
-    warehouse_status = false;
+  constructor({
+    id = null,
+    tenant_id = null,
+    product = "",
+    client = "",
+    telephone = "",
+    adress = "",
+    status = null,
+    payment_status = null,
+    order_of_service = null,
+    observation = "",
+    warehouse_status = false,
+    created_at = null,
+    updated_at_service = null,
+    updated_at_payment = null,
+    created_at_warehouse = null,
+  }: any = {}) {
+    this.id = id;
+    this.tenant_id = tenant_id;
+    this.product = product;
+    this.client = client;
+    this.telephone = telephone;
+    this.adress = adress;
+    this.status = status;
+    this.payment_status = payment_status;
+    this.order_of_service = order_of_service;
+    this.observation = observation;
+    this.warehouse_status = warehouse_status;
+    this.created_at = created_at;
+    this.updated_at_service = updated_at_service;
+    this.updated_at_payment = updated_at_payment;
+    this.created_at_warehouse = created_at_warehouse;
   }
 
-  const query =
-    "UPDATE services SET warehouse_status = $1, created_at_warehouse = $2 WHERE id = $3";
-
-  const values = [warehouse_status, created_at_warehouse, id];
-  const connect = await connection.connect();
-  const updated = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(typeTable);
-  return updated.rowCount;
-};
-
-const updateInfoClient = async (id, info) => {
-  const { product, client, telephone, adress, observation, typeTable } = info;
-
-  const query =
-    "UPDATE services SET product = $1, client = $2, telephone = $3, adress = $4, observation = $5 WHERE id = $6";
-
-  const values = [product, client, telephone, adress, observation, id];
-  const connect = await connection.connect();
-  const updated = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(typeTable);
-  return updated.rowCount;
-};
-
-const updateStatusService = async (id, status, typeTable) => {
-  const updated_at_service = utilities.generateDateLocale();
-
-  const query =
-    "UPDATE services SET status = $1, updated_at_service = $2 WHERE id = $3 RETURNING id, status";
-
-  const values = [status, updated_at_service, id];
-  const connect = await connection.connect();
-  const updated = await connect.query(query, values);
-  connect.release();
-
-  await reloadSocketData(typeTable);
-
-  return updated.rowCount;
-};
-
-const updateStatusPayment = async (id, status, typeTable) => {
-  const updated_at_payment = utilities.generateDateLocale();
-
-  const query =
-    "UPDATE services SET payment_status = $1, updated_at_payment = $2 WHERE id = $3";
-
-  const values = [status, updated_at_payment, id];
-  const connect = await connection.connect();
-  const updated = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(typeTable);
-  return updated.rowCount;
-};
-
-const remove = async (id, cod_order, typeTable) => {
-  const connect = await connection.connect();
-  const removed = await connect.query("DELETE FROM services WHERE id = $1", [id]);
-  connect.release();
-  await reloadSocketData(typeTable);
-  if (removed.rowCount) {
-    orders.remove(cod_order);
+  static fromRequest(body: any = {}) {
+    return new Service({
+      id: body.id || null,
+      tenant_id: body.tenant_id || null,
+      product: body.product,
+      client: body.client,
+      telephone: body.telephone,
+      adress: body.adress,
+      status: body.status,
+      payment_status: body.payment_status || 1,
+      order_of_service: body.order_of_service || null,
+      observation: body.observation,
+      warehouse_status: body.warehouse_status || false,
+      created_at: body.created_at || null,
+    });
   }
-  return removed.rowCount;
-};
 
-const getCountProductByService = async (data) => {
-  const connect = await connection.connect();
-  const services = await connect.query(
-    "SELECT status.name, COUNT(service.status_id) AS count FROM status LEFT JOIN service ON status.id = service.status_id GROUP BY status.name"
-  );
-  connect.release();
-  return services.rows;
-};
+  static fromRequestParams(params: any = {}) {
+    return new Service({
+      id: params.id
+    });
+  }
 
-export default {
-  reloadSocketData,
-  getAllPaid,
-  getAllNotConcluded,
-  getAll,
-  getAllWharehouse,
-  create,
-  updateWarehouse,
-  updateInfoClient,
-  updateStatusService,
-  updateStatusPayment,
-  remove,
-  getCountProductByService,
-};
+  toJSON() {
+    return {
+      id: this.id,
+      tenant_id: this.tenant_id,
+      product: this.product,
+      client: this.client,
+      telephone: this.telephone,
+      adress: this.adress,
+      status: this.status,
+      payment_status: this.payment_status,
+      order_of_service: this.order_of_service,
+      observation: this.observation,
+      warehouse_status: this.warehouse_status,
+      created_at: this.created_at,
+      updated_at_service: this.updated_at_service,
+      updated_at_payment: this.updated_at_payment,
+      created_at_warehouse: this.created_at_warehouse,
+    };
+  }
+
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    product: z.string().min(1, 'Campo "Produto" é obrigatório.').openapi({ example: "Ar Condicionado 12000 BTU" }),
+    client: z.string().min(1, 'Campo "Cliente" é obrigatório.').openapi({ example: "João Silva" }),
+    telephone: z.string().min(1, 'Campo "Telefone" é obrigatório.').openapi({ example: "(11) 99999-9999" }),
+    adress: z.string().optional().openapi({ example: "Rua das Flores, 123" }),
+    status: z.union([z.string(), z.number()]).optional().openapi({ example: 1 }),
+    payment_status: z.number().optional().openapi({ example: 1 }),
+    order_of_service: z.number().nullable().optional().openapi({ example: 1001 }),
+    observation: z.string().optional().openapi({ example: "Drenagem obstruída" }),
+    warehouse_status: z.boolean().optional().openapi({ example: false }),
+    created_at: z.string().nullable().optional().openapi({ example: "2023-11-01 10:00:00" }),
+    updated_at_service: z.string().nullable().optional().openapi({ example: "2023-11-01 12:00:00" }),
+    updated_at_payment: z.string().nullable().optional().openapi({ example: "2023-11-01 12:00:00" }),
+    created_at_warehouse: z.string().nullable().optional().openapi({ example: "2023-11-01 10:00:00" }),
+  }).openapi("Service");
+
+  static createSchema = z.object({
+    product: z.string().min(1, 'Campo "Produto" é obrigatório.'),
+    client: z.string().min(1, 'Campo "Cliente" é obrigatório.'),
+    telephone: z.string().min(1, 'Campo "Telefone" é obrigatório.'),
+    status: z.union([z.string(), z.number()]).refine(val => val !== "", { message: 'Campo "Status" é obrigatório.' })
+  }).openapi("ServiceCreate");
+
+  static updateInfoClientSchema = z.object({
+    product: z.string().min(1, 'Campo "Produto" é obrigatório.'),
+    client: z.string().min(1, 'Campo "Cliente" é obrigatório.'),
+    telephone: z.string().min(1, 'Campo "Telefone" é obrigatório.'),
+    adress: z.string().optional(),
+    observation: z.string().optional(),
+  }).openapi("ServiceUpdateInfoClient");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: Service.schema
+  }).openapi("ServiceResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(Service.schema)
+  }).openapi("ServiceListResponse");
+}
+

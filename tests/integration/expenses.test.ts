@@ -25,7 +25,7 @@ describe('Testes de Integração - Rotas de Despesas (Expenses)', () => {
 
   test('GET /expenses - sucesso', async () => {
     mockConnectWithResponses((sql) => {
-      if (sql.includes('SELECT * FROM expenses')) return { rows: [{ id: 1, description: 'Lunch' }], rowCount: 1 };
+      if (sql.includes('SELECT') && sql.includes('FROM expenses')) return { rows: [{ id: 1, description: 'Lunch' }], rowCount: 1 };
       return { rows: [], rowCount: 0 };
     });
 
@@ -34,7 +34,9 @@ describe('Testes de Integração - Rotas de Despesas (Expenses)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([{ id: 1, description: 'Lunch' }]);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([{ id: 1, description: 'Lunch' }]);
+    expect(res.body.msg).toBe("Despesas listadas com sucesso");
   });
 
   test('POST /expenses - sucesso ao criar', async () => {
@@ -53,6 +55,8 @@ describe('Testes de Integração - Rotas de Despesas (Expenses)', () => {
       });
 
     expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Despesa criada com sucesso");
   });
 
   test('DELETE /expenses/:id - sucesso ao remover', async () => {

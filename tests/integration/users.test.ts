@@ -34,7 +34,7 @@ describe('Testes de Integração - Rotas de Usuários Management', () => {
     expect(res.status).toBe(401);
   });
 
-  test('GET /users - autorizado retorna lista de usuários', async () => {
+  test('GET /users - autorizado retorna lista de usuários no campo data', async () => {
     mockConnectWithResponses((sql) => {
       if (sql.includes('SELECT') && sql.includes('FROM users')) {
         return { rows: [{ id: 1, username: 'adminuser' }], rowCount: 1 };
@@ -42,43 +42,48 @@ describe('Testes de Integração - Rotas de Usuários Management', () => {
       return { rows: [], rowCount: 0 };
     });
 
-    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false }, process.env.SECRET as string, { expiresIn: '1d' });
+    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false, tenant_id: 1 }, process.env.SECRET as string, { expiresIn: '1d' });
 
     const res = await supertest(app)
       .get('/users')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([{ id: 1, username: 'adminuser' }]);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([{ id: 1, username: 'adminuser' }]);
+    expect(res.body.msg).toBe("Usuários listados com sucesso");
   });
 
-  test('GET /users/signature/:id - autorizado retorna assinatura', async () => {
+  test('GET /users/signature/:id - autorizado retorna assinatura no campo data', async () => {
     mockConnectWithResponses((sql) => {
       if (sql.includes('signature') && sql.includes('FROM users')) return { rows: [{ signature: 'base64sig' }], rowCount: 1 };
       return { rows: [], rowCount: 0 };
     });
 
-    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false }, process.env.SECRET as string, { expiresIn: '1d' });
+    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false, tenant_id: 1 }, process.env.SECRET as string, { expiresIn: '1d' });
 
     const res = await supertest(app)
       .get('/users/signature/1')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toBe('base64sig');
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBe('base64sig');
   });
 
   test('DELETE /users/:id - usuário não encontrado', async () => {
     mockConnectWithResponses(() => {
       return { rows: [], rowCount: 0 };
     });
-    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false }, process.env.SECRET as string, { expiresIn: '1d' });
+    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false, tenant_id: 1 }, process.env.SECRET as string, { expiresIn: '1d' });
 
     const res = await supertest(app)
       .delete('/users/2')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.msg).toBe("Usuário não encontrado.");
   });
 
   test('DELETE /users/:id - administrador não pode ser removido', async () => {
@@ -86,13 +91,15 @@ describe('Testes de Integração - Rotas de Usuários Management', () => {
       if (sql.includes('FROM users WHERE id =')) return { rows: [{ admin: true }], rowCount: 1 };
       return { rows: [], rowCount: 0 };
     });
-    const token = jwt.sign({ id: 1, username: 'adminuser', admin: true }, process.env.SECRET as string, { expiresIn: '1d' });
+    const token = jwt.sign({ id: 1, username: 'adminuser', admin: true, tenant_id: 1 }, process.env.SECRET as string, { expiresIn: '1d' });
 
     const res = await supertest(app)
       .delete('/users/2')
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(422);
+    expect(res.body.success).toBe(false);
+    expect(res.body.msg).toBe("Usuário administrador não pode ser removido.");
   });
 
   test('DELETE /users/:id - sucesso retorna 204', async () => {
@@ -101,7 +108,7 @@ describe('Testes de Integração - Rotas de Usuários Management', () => {
       if (sql.startsWith('DELETE')) return { rowCount: 1 };
       return { rows: [], rowCount: 0 };
     });
-    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false }, process.env.SECRET as string, { expiresIn: '1d' });
+    const token = jwt.sign({ id: 1, username: 'adminuser', admin: false, tenant_id: 1 }, process.env.SECRET as string, { expiresIn: '1d' });
 
     const res = await supertest(app)
       .delete('/users/2')

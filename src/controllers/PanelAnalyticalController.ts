@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import PanelAnalyticalService from "../services/PanelAnalyticalService.js";
+import ResponseHandler from "../utils/ResponseHandler.js";
 
 const getLabelCards = () => {
   const addZero = (num: number) => (num < 10 ? '0' : '') + num;
@@ -45,10 +46,11 @@ const getWeekBounds = (date: Date) => {
 };
 
 export default class PanelAnalyticalController {
-  static async getSumValuesOrdersPaid(_req: Request, res: Response) {
+  static async getSumValuesOrdersPaid(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
     const { labelDay, labelWeek, labelMonth, labelYear } = getLabelCards();
 
-    const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid();
+    const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid(tenant_id);
     let somaMesmoDia = 0;
     let somaMesmoMes = 0;
     let somaMesmoAno = 0;
@@ -96,7 +98,7 @@ export default class PanelAnalyticalController {
       }
     });
 
-    return res.status(200).json({
+    return ResponseHandler.success(res, {
       daily: {
         value: somaMesmoDia,
         day: labelDay
@@ -116,7 +118,8 @@ export default class PanelAnalyticalController {
     });
   }
 
-  static async getValuesInvoicingLiquid(_req: Request, res: Response) {
+  static async getValuesInvoicingLiquid(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
     const { labelMonth, labelYear } = getLabelCards();
 
     const dataAtual = new Date();
@@ -124,7 +127,7 @@ export default class PanelAnalyticalController {
     let valueEntryMonth = 0;
     let valueEntryYear = 0;
 
-    const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid();
+    const filteredOrderOfService = await PanelAnalyticalService.getOrdersPaid(tenant_id);
 
     if (filteredOrderOfService) {
       filteredOrderOfService.forEach((order: any) => {
@@ -153,7 +156,7 @@ export default class PanelAnalyticalController {
     let valueExitMonth = 0;
     let valueExitYear = 0;
 
-    const expensesAll = await PanelAnalyticalService.loadExpensesAll()
+    const expensesAll = await PanelAnalyticalService.loadExpensesAll(tenant_id)
 
     if (expensesAll) {
       expensesAll.forEach((expense: any) => {
@@ -179,7 +182,7 @@ export default class PanelAnalyticalController {
       });
     }
 
-    return res.status(200).json({
+    return ResponseHandler.success(res, {
       monthly: {
         label: labelMonth,
         entry: valueEntryMonth,
@@ -195,3 +198,4 @@ export default class PanelAnalyticalController {
     });
   }
 }
+

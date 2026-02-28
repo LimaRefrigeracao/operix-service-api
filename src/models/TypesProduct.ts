@@ -1,35 +1,65 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const getAll = async () => {
-  const connect = await connection.connect();
-  const types_product = await connect.query("SELECT * FROM types_product");
-  connect.release();
-  return types_product.rows;
-};
+extendZodWithOpenApi(z);
 
-const create = async (types_product) => {
-  const { tenant_id, name } = types_product;
-  const query = "INSERT INTO types_product (tenant_id, name) VALUES ($1, $2)";
+export default class TypeProduct {
+  id: number | null;
+  tenant_id: number | null;
+  name: string;
 
-  const values = [tenant_id, name];
+  constructor({
+    id = null,
+    tenant_id = null,
+    name = "",
+  }: any = {}) {
+    this.id = id;
+    this.tenant_id = tenant_id;
+    this.name = name;
+  }
 
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
+  static fromRequest(body: any = {}) {
+    return new TypeProduct({
+      id: body.id || null,
+      tenant_id: body.tenant_id || null,
+      name: body.name,
+    });
+  }
 
-  return created.rowCount;
-};
+  static fromRequestParams(params: any = {}) {
+    return new TypeProduct({
+      id: params.id
+    });
+  }
 
-const remove = async (id) => {
-  const connect = await connection.connect();
-  const removed = await connect.query("DELETE FROM types_product WHERE id = $1", [id]);
-  connect.release();
-  return removed.rowCount;
-};
+  toJSON() {
+    return {
+      id: this.id,
+      tenant_id: this.tenant_id,
+      name: this.name,
+    };
+  }
 
-export default {
-  getAll,
-  create,
-  remove,
-};
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    name: z.string().min(1, 'Campo "Nome" é obrigatório.').openapi({ example: "Ar Condicionado" }),
+  }).openapi("TypeProduct");
+
+  static createSchema = z.object({
+    name: z.string().min(1, 'Campo "Nome" é obrigatório.').openapi({ example: "Geladeira" }),
+  }).openapi("TypeProductCreate");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: TypeProduct.schema
+  }).openapi("TypeProductResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(TypeProduct.schema)
+  }).openapi("TypeProductListResponse");
+}
+

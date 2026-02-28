@@ -2,36 +2,36 @@
 import ServicesRepository from "../repositories/ServicesRepository.js";
 
 class ServicesService {
-  static async getAll() {
-    return ServicesRepository.getAll();
+  static async getAll(tenant_id) {
+    return ServicesRepository.getAll(tenant_id);
   }
 
-  static async getAllWharehouse() {
-    return ServicesRepository.getAllWharehouse();
+  static async getAllWharehouse(tenant_id) {
+    return ServicesRepository.getAllWharehouse(tenant_id);
   }
 
-  static async create(data: any) {
-    return ServicesRepository.create(data);
+  static async create(service) {
+    return ServicesRepository.create(service);
   }
 
-  static async updateWarehouse(id, value, typeTable) {
-    return ServicesRepository.updateWarehouse(id, value, typeTable);
+  static async updateWarehouse(id, tenant_id, value, typeTable) {
+    return ServicesRepository.updateWarehouse(id, tenant_id, value, typeTable);
   }
 
-  static async updateInfoClient(id, info) {
-    return ServicesRepository.updateInfoClient(id, info);
+  static async updateInfoClient(id, tenant_id, info) {
+    return ServicesRepository.updateInfoClient(id, tenant_id, info);
   }
 
-  static async updateStatusService(id, status, typeTable) {
-    return ServicesRepository.updateStatusService(id, status, typeTable);
+  static async updateStatusService(id, tenant_id, status, typeTable) {
+    return ServicesRepository.updateStatusService(id, tenant_id, status, typeTable);
   }
 
-  static async updateStatusPayment(id, status, typeTable) {
-    return ServicesRepository.updateStatusPayment(id, status, typeTable);
+  static async updateStatusPayment(id, tenant_id, status, typeTable) {
+    return ServicesRepository.updateStatusPayment(id, tenant_id, status, typeTable);
   }
 
-  static async remove(id, cod, typeTable: any) {
-    return ServicesRepository.remove(id, cod, typeTable);
+  static async remove(id, tenant_id, cod, typeTable) {
+    return ServicesRepository.remove(id, tenant_id, cod, typeTable);
   }
 }
 

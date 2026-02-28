@@ -21,7 +21,7 @@ function mockConnectWithResponses(responder: (sql: string, params: any[]) => any
 }
 
 describe('Testes de Integração - Rotas de Tenants', () => {
-  const token = jwt.sign({ id: 1, username: 'u', admin: true }, 'testsecret', { expiresIn: '1d' });
+  const token = jwt.sign({ id: 1, username: 'u', admin: true, tenant_id: 1 }, 'testsecret', { expiresIn: '1d' });
 
   test('GET /tenants - requer autenticação', async () => {
     const res = await supertest(app).get('/tenants');
@@ -30,7 +30,7 @@ describe('Testes de Integração - Rotas de Tenants', () => {
 
   test('GET /tenants - sucesso', async () => {
     mockConnectWithResponses((sql) => {
-      if (sql.includes('SELECT * FROM tenants')) return { rows: [{ id: 1, name: 'Tenant A' }], rowCount: 1 };
+      if (sql.includes('SELECT') && sql.includes('FROM tenants')) return { rows: [{ id: 1, name: 'Tenant A' }], rowCount: 1 };
       return { rows: [], rowCount: 0 };
     });
 
@@ -39,7 +39,9 @@ describe('Testes de Integração - Rotas de Tenants', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([{ id: 1, name: 'Tenant A' }]);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual([{ id: 1, name: 'Tenant A' }]);
+    expect(res.body.msg).toBe("Unidades listadas com sucesso");
   });
 
   test('POST /tenants - sucesso ao criar tenant', async () => {
@@ -54,7 +56,9 @@ describe('Testes de Integração - Rotas de Tenants', () => {
       .send({ name: 'Novo Tenant' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toBe(1); // the repository returns rowCount
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toBe(1);
+    expect(res.body.msg).toBe("Unidade criada com sucesso");
   });
 
   test('DELETE /tenants/:id - sucesso ao remover', async () => {

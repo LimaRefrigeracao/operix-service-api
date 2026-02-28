@@ -2,16 +2,16 @@
 import ExpensesRepository from "../repositories/ExpensesRepository.js";
 
 class ExpensesService {
-  static async getAll() {
-    return ExpensesRepository.getAll();
+  static async getAll(tenant_id) {
+    return ExpensesRepository.getAll(tenant_id);
   }
 
-  static async create(data: any) {
-    return ExpensesRepository.create(data);
+  static async create(expense) {
+    return ExpensesRepository.create(expense);
   }
 
-  static async remove(id: any) {
-    return ExpensesRepository.remove(id);
+  static async remove(id, tenant_id) {
+    return ExpensesRepository.remove(id, tenant_id);
   }
 }
 

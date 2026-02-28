@@ -1,43 +1,78 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const getAll = async () => {
-  const connect = await connection.connect();
-  const status_payment = await connect.query("SELECT * FROM status_payment");
-  connect.release();
-  return status_payment.rows;
-};
+extendZodWithOpenApi(z);
 
-const getUniqueStatus = async (description) => {
-  const connect = await connection.connect();
-  const status_payment = await connect.query("SELECT cod FROM status_payment WHERE description = $1", [description]);
-  connect.release();
-  return status_payment.rows;
-};
+export default class StatusPayment {
+  id: number | null;
+  tenant_id: number | null;
+  description: string;
+  cod: number | null;
+  color: string;
 
-const create = async (status_payment) => {
-  const { description, cod, color } = status_payment;
-  const query = "INSERT INTO status_payment (description, cod, color) VALUES ($1, $2, $3)";
+  constructor({
+    id = null,
+    tenant_id = null,
+    description = "",
+    cod = null,
+    color = "",
+  }: any = {}) {
+    this.id = id;
+    this.tenant_id = tenant_id;
+    this.description = description;
+    this.cod = cod;
+    this.color = color;
+  }
 
-  const values = [description, cod, color];
+  static fromRequest(body: any = {}) {
+    return new StatusPayment({
+      id: body.id || null,
+      tenant_id: body.tenant_id || null,
+      description: body.description,
+      cod: body.cod,
+      color: body.color,
+    });
+  }
 
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
+  static fromRequestParams(params: any = {}) {
+    return new StatusPayment({
+      id: params.id
+    });
+  }
 
-  return created.rowCount;
-};
+  toJSON() {
+    return {
+      id: this.id,
+      tenant_id: this.tenant_id,
+      description: this.description,
+      cod: this.cod,
+      color: this.color,
+    };
+  }
 
-const remove = async (id) => {
-  const connect = await connection.connect();
-  const removed = await connect.query("DELETE FROM status_payment WHERE id = $1", [id]);
-  connect.release();
-  return removed.rowCount;
-};
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Pago" }),
+    cod: z.number().nullable().optional().openapi({ example: 2 }),
+    color: z.string().optional().openapi({ example: "#00FF00" }),
+  }).openapi("StatusPayment");
 
-export default {
-  getAll,
-  getUniqueStatus,
-  create,
-  remove,
-};
+  static createSchema = z.object({
+    description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Pendente" }),
+    color: z.string().optional().openapi({ example: "#FFFF00" }),
+  }).openapi("StatusPaymentCreate");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: StatusPayment.schema
+  }).openapi("StatusPaymentResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(StatusPayment.schema)
+  }).openapi("StatusPaymentListResponse");
+}
+

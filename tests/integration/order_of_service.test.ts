@@ -33,6 +33,8 @@ describe('Testes de Integração - Rotas de Ordem de Serviço (Order of Service)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Ordens de serviço listadas com sucesso");
   });
 
   test('GET /order_of_service/:cod - sucesso', async () => {
@@ -45,10 +47,15 @@ describe('Testes de Integração - Rotas de Ordem de Serviço (Order of Service)
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Ordem de serviço detalhada com sucesso");
   });
 
   test('PUT /order_of_service/estimate/:cod - sucesso', async () => {
     mockConnectWithResponses((sql) => {
+      if (sql.includes('FROM order_of_service')) {
+        return { rows: [{ id: 1, cod: 'OS123', estimate: '[]' }], rowCount: 1 };
+      }
       return { rowCount: 1 };
     });
 
@@ -57,10 +64,13 @@ describe('Testes de Integração - Rotas de Ordem de Serviço (Order of Service)
       .set('Authorization', `Bearer ${token}`)
       .send({
         description: 'New estimate',
-        value: 50
+        price: 50,
+        amount: 1,
+        type: 'completa'
       });
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 
   test('DELETE /order_of_service/estimate/:cod/:idEstimate - sucesso', async () => {

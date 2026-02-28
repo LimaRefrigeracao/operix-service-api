@@ -1,35 +1,24 @@
 // @ts-nocheck
-import connection from "../database/connection.js";
-import moment from "moment";
-import serviceModel from "./Services.js";
+export default class Tool {
+  constructor({
+    id = null,
+    name = "",
+  }: any = {}) {
+    this.id = id;
+    this.name = name;
+  }
 
-const getNotifications = async () => {
-  const connect = await connection.connect();
-  const services = await serviceModel.getAllNotConcluded();
-  connect.release();
+  static fromRequest(body: any = {}) {
+    return new Tool({
+      id: body.id || null,
+      name: body.name,
+    });
+  }
 
-  const currentDate = moment();
-  const filteredResult = services.filter((service) => {
-    const createdAt = moment(service.created_at);
-    const daysDifference = currentDate.diff(createdAt, "days");
-    return daysDifference >= 7;
-  });
-
-  const resultWithDays = filteredResult.map((service) => {
-    const createdAt = moment(service.created_at);
-    const days = currentDate.diff(createdAt, "days");
+  toJSON() {
     return {
-      ...service,
-      days,
+      id: this.id,
+      name: this.name,
     };
-  });
-
-  const sortedResult = resultWithDays.sort((a, b) => b.days - a.days);
-
-  return sortedResult;
-};
-
-
-export default {
-  getNotifications,
-};
+  }
+}

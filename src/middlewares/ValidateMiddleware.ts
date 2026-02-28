@@ -1,17 +1,18 @@
 import type { ZodSchema } from "zod";
 import type { Request, Response, NextFunction } from "express";
+import ResponseHandler from "../utils/ResponseHandler.js";
 
 class ValidateMiddleware {
   static validateSchema(schema: ZodSchema<any>) {
     return (req: Request, res: Response, next: NextFunction) => {
-      const result = schema.safeParse(req.body);
+      const result = schema.parseAsync(req.body);
 
-      if (!result.success) {
-        return res.status(400).json({ msg: "Dados inválidos", error: result.error.message });
-      }
-
-      req.body = result.data;
-      next();
+      result.then((data) => {
+        req.body = data;
+        next();
+      }).catch((error) => {
+        return ResponseHandler.error(res, "Dados inválidos: " + error.message, 400);
+      });
     };
   }
 }

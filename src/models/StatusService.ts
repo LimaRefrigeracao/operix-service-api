@@ -1,35 +1,78 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const getAll = async () => {
-  const connect = await connection.connect();
-  const status_service = await connect.query("SELECT * FROM status_service");
-  connect.release();
-  return status_service.rows;
-};
+extendZodWithOpenApi(z);
 
-const create = async (status_service) => {
-  const { description, cod, color } = status_service;
-  const query = "INSERT INTO status_service (description, cod, color) VALUES ($1, $2, $3)";
+export default class StatusService {
+  id: number | null;
+  tenant_id: number | null;
+  description: string;
+  cod: number | null;
+  color: string;
 
-  const values = [description, cod, color];
+  constructor({
+    id = null,
+    tenant_id = null,
+    description = "",
+    cod = null,
+    color = "",
+  }: any = {}) {
+    this.id = id;
+    this.tenant_id = tenant_id;
+    this.description = description;
+    this.cod = cod;
+    this.color = color;
+  }
 
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
+  static fromRequest(body: any = {}) {
+    return new StatusService({
+      id: body.id || null,
+      tenant_id: body.tenant_id || null,
+      description: body.description,
+      cod: body.cod,
+      color: body.color,
+    });
+  }
 
-  return created.rowCount;
-};
+  static fromRequestParams(params: any = {}) {
+    return new StatusService({
+      id: params.id
+    });
+  }
 
-const remove = async (id) => {
-  const connect = await connection.connect();
-  const removed = await connect.query("DELETE FROM status_service WHERE id = $1", [id]);
-  connect.release();
-  return removed.rowCount;
-};
+  toJSON() {
+    return {
+      id: this.id,
+      tenant_id: this.tenant_id,
+      description: this.description,
+      cod: this.cod,
+      color: this.color,
+    };
+  }
 
-export default {
-  getAll,
-  create,
-  remove,
-};
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Em Andamento" }),
+    cod: z.number().nullable().optional().openapi({ example: 1 }),
+    color: z.string().optional().openapi({ example: "#OOOOFF" }),
+  }).openapi("StatusService");
+
+  static createSchema = z.object({
+    description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Concluído" }),
+    color: z.string().optional().openapi({ example: "#00FF00" }),
+  }).openapi("StatusServiceCreate");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: StatusService.schema
+  }).openapi("StatusServiceResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(StatusService.schema)
+  }).openapi("StatusServiceListResponse");
+}
+

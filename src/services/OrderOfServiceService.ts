@@ -1,25 +1,30 @@
 // @ts-nocheck
 import OrderOfServiceRepository from "../repositories/OrderOfServiceRepository.js";
+import ValidationError from "../utils/ValidationError.js";
 
 class OrderOfServiceService {
-  static async getAll() {
-    return OrderOfServiceRepository.getAll();
+  static async getAll(tenant_id) {
+    return OrderOfServiceRepository.getAll(tenant_id);
   }
 
-  static async getUnique(cod) {
-    return OrderOfServiceRepository.getUnique(cod);
+  static async getUnique(cod, tenant_id) {
+    const order = await OrderOfServiceRepository.getUnique(cod, tenant_id);
+    if (!order || order.length === 0) {
+      throw new ValidationError("Ordem de serviço não encontrada", 404);
+    }
+    return order;
   }
 
-  static async updateEstimate(estimateArray, totalPrice, cod) {
-    return OrderOfServiceRepository.updateEstimate(estimateArray, totalPrice, cod);
+  static async updateEstimate(estimateArray, totalPrice, cod, tenant_id) {
+    return OrderOfServiceRepository.updateEstimate(estimateArray, totalPrice, cod, tenant_id);
   }
 
-  static async removeEstimate(cod, idEstimate) {
-    return OrderOfServiceRepository.removeEstimate(cod, idEstimate);
+  static async removeEstimate(cod, tenant_id, idEstimate) {
+    return OrderOfServiceRepository.removeEstimate(cod, tenant_id, idEstimate);
   }
 
-  static async removeEstimateSimple(cod, id) {
-    return OrderOfServiceRepository.removeEstimateSimple(cod, id);
+  static async removeEstimateSimple(cod, tenant_id) {
+    return OrderOfServiceRepository.removeEstimateSimple(cod, tenant_id);
   }
 }
 

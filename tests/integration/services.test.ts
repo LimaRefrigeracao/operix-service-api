@@ -34,6 +34,8 @@ describe('Testes de Integração - Rotas de Serviços (Services)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Serviços listados com sucesso");
   });
 
   test('GET /services/warehouse - sucesso', async () => {
@@ -46,6 +48,8 @@ describe('Testes de Integração - Rotas de Serviços (Services)', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Itens de almoxarifado listados com sucesso");
   });
 
   test('POST /services - sucesso ao criar', async () => {
@@ -64,6 +68,8 @@ describe('Testes de Integração - Rotas de Serviços (Services)', () => {
       });
 
     expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Serviço criado com sucesso");
   });
 
   test('PUT /services/warehouse/:id/:value - sucesso', async () => {
@@ -73,9 +79,11 @@ describe('Testes de Integração - Rotas de Serviços (Services)', () => {
 
     const res = await supertest(app)
       .put('/services/warehouse/1/20')
-      .set('Authorization', `Bearer ${token}`);
+      .set('Authorization', `Bearer ${token}`)
+      .send({ typeTable: 'OS' });
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
   });
 
   test('PUT /services/info/client/:id - sucesso', async () => {
@@ -92,6 +100,8 @@ describe('Testes de Integração - Rotas de Serviços (Services)', () => {
       });
 
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Informações de cliente atualizadas com sucesso");
   });
 
   test('DELETE /services/:id/:cod/:typeTable - sucesso', async () => {

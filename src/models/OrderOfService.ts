@@ -1,112 +1,90 @@
-// @ts-nocheck
-import connection from "../database/connection.js";
-import utilities from "../utils/utils.js";
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
-const reloadSocketData = async (cod_order) => {
-  const data = await getUnique(cod_order);
-  const mod = await import("../app.js");
-  const app = mod.default || mod;
-  const { io } = app;
-  io.emit("reloadDataOrders", data);
-  return true;
-};
+extendZodWithOpenApi(z);
 
-const getUnique = async (cod) => {
-  const connect = await connection.connect();
-  const order_of_service = await connect.query(
-    `SELECT * FROM order_of_service WHERE cod_order = ${cod}`
-  );
-  connect.release();
-  return order_of_service.rows;
-};
+export default class OrderOfService {
+  cod_order: number | null;
+  tenant_id: number | null;
+  estimate: string | null;
+  value: number;
+  created_at: string | null;
 
-const getAll = async () => {
-  const connect = await connection.connect();
-  const order_of_service = await connect.query(
-    `SELECT * FROM order_of_service`
-  );
-  connect.release();
-  return order_of_service.rows;
-};
-
-const create = async (created_at) => {
-  const query =
-    "INSERT INTO order_of_service(created_at) VALUES ($1) RETURNING cod_order";
-
-  const values = [created_at];
-
-  const connect = await connection.connect();
-  const created = await connect.query(query, values);
-  connect.release();
-
-  return created.rows[0].cod_order;
-};
-
-const removeEstimate = async (cod, idEstimate) => {
-  const getOrderValue = await getUnique(cod);
-  let estimateArray = JSON.parse(getOrderValue[0].estimate);
-
-  estimateArray = estimateArray.filter((element) => element.id != idEstimate);
-
-  let newValue = 0;
-  for (const record of estimateArray) {
-    newValue += record.price;
+  constructor({
+    cod_order = null,
+    tenant_id = null,
+    estimate = null,
+    value = 0,
+    created_at = null,
+  }: any = {}) {
+    this.cod_order = cod_order;
+    this.tenant_id = tenant_id;
+    this.estimate = estimate;
+    this.value = value;
+    this.created_at = created_at;
   }
-  estimateArray = JSON.stringify(estimateArray);
-  const query =
-    "UPDATE order_of_service SET estimate = $1 ,value = $2 WHERE cod_order = $3";
 
-  const values = [estimateArray, newValue, cod];
-  const connect = await connection.connect();
-  const removed = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(cod);
-  return removed.rowCount;
-};
+  static fromRequest(body: any = {}) {
+    return new OrderOfService({
+      cod_order: body.cod_order || null,
+      tenant_id: body.tenant_id || null,
+      estimate: body.estimate,
+      value: body.value,
+      created_at: body.created_at || null,
+    });
+  }
 
-const removeEstimateSimple = async (cod, idEstimate) => {
-  const query =
-    "UPDATE order_of_service SET estimate = $1,value = $2 WHERE cod_order = $3";
+  static fromRequestParams(params: any = {}) {
+    return new OrderOfService({
+      cod_order: params.cod || params.cod_order
+    });
+  }
 
-  const values = [null, null, cod];
-  const connect = await connection.connect();
-  const removed = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(cod);
-  return removed.rowCount;
-};
+  toJSON() {
+    return {
+      cod_order: this.cod_order,
+      tenant_id: this.tenant_id,
+      estimate: this.estimate,
+      value: this.value,
+      created_at: this.created_at,
+    };
+  }
 
-const updateEstimate = async (estimateArray, totalPrice, cod) => {
-  const estimate = estimateArray;
+  static schema = z.object({
+    cod_order: z.union([z.string(), z.number()]).nullable().optional().openapi({ example: 1001 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    estimate: z.string().nullable().optional().openapi({ example: '[{"type":"peca","description":"Compressor","price":500,"amount":1}]' }),
+    value: z.number().nullable().optional().openapi({ example: 500.00 }),
+    created_at: z.string().nullable().optional().openapi({ example: "2023-11-01 10:00:00" }),
+  }).openapi("OrderOfService");
 
-  const query =
-    "UPDATE order_of_service SET estimate = $1, value = $2 WHERE cod_order = $3";
+  static updateEstimateSchema = z.object({
+    type: z.string().min(1, 'Campo "Tipo" é obrigatório.').openapi({ example: "peca" }),
+    description: z.string().min(1, 'Campo "Descrição" é obrigatório.').openapi({ example: "Filtro de Ar" }),
+    price: z.union([z.string(), z.number()]).refine(val => val !== "", { message: 'Campo "Preço" é obrigatório.' }).openapi({ example: 50.00 }),
+    amount: z.union([z.string(), z.number()]).optional().openapi({ example: 2 })
+  }).superRefine((data, ctx) => {
+    if (data.type !== "simples") {
+      if (data.amount === undefined || data.amount === "") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Campo "Quantidade" é obrigatório.',
+          path: ["amount"]
+        });
+      }
+    }
+  }).openapi("OrderUpdateEstimate");
 
-  const values = [estimate, totalPrice, cod];
-  const connect = await connection.connect();
-  const updated = await connect.query(query, values);
-  connect.release();
-  await reloadSocketData(cod);
-  return updated.rowCount;
-};
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: OrderOfService.schema
+  }).openapi("OrderOfServiceResponse");
 
-const remove = async (cod_order) => {
-  const connect = await connection.connect();
-  const removed = await connect.query(
-    "DELETE FROM order_of_service WHERE cod_order = $1",
-    [cod_order]
-  );
-  connect.release();
-  return removed.rowCount;
-};
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(OrderOfService.schema)
+  }).openapi("OrderOfServiceListResponse");
+}
 
-export default {
-  reloadSocketData,
-  getAll,
-  getUnique,
-  create,
-  removeEstimate,
-  removeEstimateSimple,
-  updateEstimate,
-  remove,
-};

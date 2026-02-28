@@ -1,83 +1,93 @@
 import type { Request, Response } from 'express';
 import OrderOfServiceService from "../services/OrderOfServiceService.js";
-import utilities from "../utils/utils.js";
+import Utils from "../utils/Utils.js";
+import ResponseHandler from "../utils/ResponseHandler.js";
 
 export default class OrderOfServiceController {
-  static async getAll(_req: any, res: Response) {
-    const order_of_service = await OrderOfServiceService.getAll();
-    return res.status(200).json(order_of_service);
+  static async getAll(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
+    const order_of_service = await OrderOfServiceService.getAll(tenant_id);
+    return ResponseHandler.success(res, order_of_service, "Ordens de serviço listadas com sucesso");
   }
 
   static async getUnique(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
     const { cod } = req.params;
-    const order_of_service = await OrderOfServiceService.getUnique(cod);
-    return res.status(200).json(order_of_service);
+    const order_of_service = await OrderOfServiceService.getUnique(cod, tenant_id);
+    return ResponseHandler.success(res, order_of_service, "Ordem de serviço detalhada com sucesso");
   }
 
   static async updateEstimate(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
     const { cod } = req.params;
-    if (req.body.type == "completa") {
-      const getOrderValue = await OrderOfServiceService.getUnique(cod);
-      const id = utilities.generateUuid();
-      let estimateArray = null;
-      let totalPrice = 0;
 
-      estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
+    if (req.body.type === "completa") {
+      const getOrderValue = await OrderOfServiceService.getUnique(cod, tenant_id);
+
+      const id = Utils.generateUuid();
+      let estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
+
       const newRecord = {
         id: id,
         amount: req.body.amount,
         description: req.body.description,
         price: req.body.price,
       };
+
       estimateArray.push(newRecord);
+      let totalPrice = 0;
       for (const record of estimateArray) {
         totalPrice += record.price;
       }
-      estimateArray = JSON.stringify(estimateArray);
-      const order_of_service = await OrderOfServiceService.updateEstimate(
-        estimateArray,
+
+      const updated = await OrderOfServiceService.updateEstimate(
+        JSON.stringify(estimateArray),
         totalPrice,
-        cod
+        cod,
+        tenant_id
       );
-      return res.status(200).json(order_of_service);
+      return ResponseHandler.success(res, updated, "Orçamento atualizado com sucesso");
     } else {
-      const remove_estimate_simple = await OrderOfServiceService.removeEstimateSimple(cod, req.body.id);
+      const removed = await OrderOfServiceService.removeEstimateSimple(cod, tenant_id);
+      if (removed) {
+        const getOrderValue = await OrderOfServiceService.getUnique(cod, tenant_id);
+        const id = Utils.generateUuid();
+        let estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
 
-      if (remove_estimate_simple) {
-        const getOrderValue = await OrderOfServiceService.getUnique(cod);
-        const id = utilities.generateUuid();
-        let estimateArray = null;
-        let totalPrice = 0;
-
-        estimateArray = JSON.parse(getOrderValue[0].estimate) || [];
         const newRecord = {
           id: id,
           amount: req.body.amount,
           description: req.body.description,
           price: req.body.price,
         };
+
         estimateArray.push(newRecord);
+        let totalPrice = 0;
         for (const record of estimateArray) {
           totalPrice += record.price;
         }
-        estimateArray = JSON.stringify(estimateArray);
-        const order_of_service = await OrderOfServiceService.updateEstimate(
-          estimateArray,
+
+        const updated = await OrderOfServiceService.updateEstimate(
+          JSON.stringify(estimateArray),
           totalPrice,
-          cod
+          cod,
+          tenant_id
         );
-        return res.status(200).json(order_of_service);
+        return ResponseHandler.success(res, updated, "Orçamento simplificado atualizado com sucesso");
       }
-      return res.status(433).json();
+      return ResponseHandler.error(res, "Erro ao atualizar orçamento simplificado", 422);
     }
   }
 
   static async removeEstimate(req: Request, res: Response) {
+    const { tenant_id } = (req as any).user;
     const { cod, idEstimate } = req.params;
-    const order_of_service = await OrderOfServiceService.removeEstimate(
+    const result = await OrderOfServiceService.removeEstimate(
       cod,
+      tenant_id,
       idEstimate
     );
-    return res.status(204).json(order_of_service);
+    return ResponseHandler.success(res, result, "Orçamento removido com sucesso", 204);
   }
 }
+

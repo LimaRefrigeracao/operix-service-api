@@ -2,12 +2,12 @@
 import PanelAnalyticalRepository from "../repositories/PanelAnalyticalRepository.js";
 
 class PanelAnalyticalService {
-  static async getOrdersPaid() {
-    return PanelAnalyticalRepository.getOrdersPaid();
+  static async getOrdersPaid(tenant_id) {
+    return PanelAnalyticalRepository.getOrdersPaid(tenant_id);
   }
 
-  static async loadExpensesAll() {
-    return PanelAnalyticalRepository.loadExpensesAll();
+  static async loadExpensesAll(tenant_id) {
+    return PanelAnalyticalRepository.loadExpensesAll(tenant_id);
   }
 }
 

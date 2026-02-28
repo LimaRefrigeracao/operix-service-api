@@ -34,9 +34,10 @@ describe('Testes de Integração - Autenticação (Auth)', () => {
       .send({ email: 'admin@operix.com.br', password: 'adminpassword', confirmPassword: 'adminpassword', tenant_id: 1 });
 
     expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
   });
 
-  test('POST /auth/register - sucesso retorna 200', async () => {
+  test('POST /auth/register - sucesso retorna 201', async () => {
     mockConnectWithResponses((sql) => {
       if (sql.includes('WHERE email')) return { rowCount: 0, rows: [] };
       if (sql.includes('WHERE username')) return { rowCount: 0, rows: [] };
@@ -54,7 +55,9 @@ describe('Testes de Integração - Autenticação (Auth)', () => {
         tenant_id: 1
       });
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.msg).toBe("Usuário registrado com sucesso");
   });
 
   test('POST /auth/login - senha ausente retorna 400', async () => {
@@ -63,9 +66,10 @@ describe('Testes de Integração - Autenticação (Auth)', () => {
       .send({ username: 'adminuser' });
 
     expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
   });
 
-  test('POST /auth/login - sucesso retorna token e usuário', async () => {
+  test('POST /auth/login - sucesso retorna token e usuário no campo data', async () => {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash('adminpassword', salt);
 
@@ -81,7 +85,9 @@ describe('Testes de Integração - Autenticação (Auth)', () => {
       .send({ username: 'adminuser', password: 'adminpassword', remember: true });
 
     expect(res.status).toBe(200);
-    expect(res.body.token).toBeDefined();
-    expect(res.body.user).toBeDefined();
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.token).toBeDefined();
+    expect(res.body.data.user).toBeDefined();
+    expect(res.body.msg).toBe("Login realizado com sucesso");
   });
 });

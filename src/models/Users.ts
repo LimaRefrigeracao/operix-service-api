@@ -1,5 +1,19 @@
-// @ts-nocheck
+import { z } from "zod";
+import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
+
+extendZodWithOpenApi(z);
+
 export default class User {
+  id: number | null;
+  tenant_id: number | null;
+  username: string;
+  email: string;
+  password: string | null;
+  root: boolean;
+  admin: boolean;
+  signature: string | null;
+  remember: boolean;
+
   constructor({
     id = null,
     tenant_id = null,
@@ -22,27 +36,6 @@ export default class User {
     this.remember = remember;
   }
 
-  static fromRequestLogin(body: any = {}) {
-    return new User({
-      username: body.username,
-      password: body.password,
-      remember: body.remember || false,
-    });
-  }
-
-  static fromRequest(body: any = {}) {
-    return new User({
-      id: body.id || null,
-      tenant_id: body.tenant_id || body.tenant || null,
-      username: body.username,
-      email: body.email,
-      password: body.password || body.passwordHash || null,
-      root: typeof body.root !== "undefined" ? body.root : false,
-      admin: typeof body.admin !== "undefined" ? body.admin : false,
-      signature: body.signature || null,
-    });
-  }
-
   static fromRequestParams(params: any = {}) {
     return new User({
       id: params.id
@@ -60,4 +53,27 @@ export default class User {
       signature: this.signature,
     };
   }
+
+  static schema = z.object({
+    id: z.number().nullable().optional().openapi({ example: 1 }),
+    tenant_id: z.number().nullable().optional().openapi({ example: 1 }),
+    username: z.string().min(1, 'Nome de Usuário é obrigatório.').openapi({ example: "joao123" }),
+    email: z.string().email('Email é obrigatório e deve ser válido.').openapi({ example: "joao@operix.com.br" }),
+    root: z.boolean().optional().openapi({ example: false }),
+    admin: z.boolean().optional().openapi({ example: true }),
+    signature: z.string().nullable().optional().openapi({ example: "data:image/png;base64,..." }),
+  }).openapi("User");
+
+  static responseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: User.schema
+  }).openapi("UserResponse");
+
+  static listResponseSchema = z.object({
+    success: z.boolean(),
+    msg: z.string(),
+    data: z.array(User.schema)
+  }).openapi("UserListResponse");
 }
+
